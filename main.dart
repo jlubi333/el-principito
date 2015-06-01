@@ -4,7 +4,7 @@ import "dart:async";
 
 const num DT = 1000 / 60;
 
-const num GRAVITY = Tile.SIZE * 30;
+const num GRAVITY = Tile.SIZE * 40;
 
 // 0b01
 const int X_COLLISION_MASK = 1;
@@ -14,9 +14,17 @@ const int Y_COLLISION_MASK = 2;
 const int RENDER_DISTANCE = 10;
 
 const int SPACEBAR_KEY = 32;
+
+const int LEFT_KEY = 37;
+const int UP_KEY = 38;
+const int RIGHT_KEY = 39;
+const int DOWN_KEY = 40;
+
 const int A_KEY = 65;
 const int D_KEY = 68;
 const int W_KEY = 87;
+
+Random randomizer = new Random();
 
 Map<int, bool> keys = {};
 
@@ -26,6 +34,7 @@ CanvasRenderingContext2D ctx;
 List<List<Tile>> tiles = [];
 
 List<Entity> entities = [];
+List<Entity> entitiesPendingRemoval = [];
 Player player;
 
 void main() async {
@@ -64,8 +73,10 @@ void startGame() async {
         }
     }
 
-    player = new Player(new BoundingBox(Tile.SIZE, Tile.SIZE, Tile.SIZE, Tile.SIZE), Tile.SIZE * 6, Tile.SIZE * 15);
+    player = new Player(new BoundingBox(Tile.SIZE, Tile.SIZE, Tile.SIZE, Tile.SIZE), Direction.RIGHT, Tile.SIZE * 6, Tile.SIZE * 15, Tile.SIZE * 1.5);
     entities.add(player);
+
+    entities.add(new IdiotEnemy(new BoundingBox(Tile.SIZE * 5, Tile.SIZE, Tile.SIZE, Tile.SIZE), Tile.SIZE * 0.5, Tile.SIZE * 1));
 
     // Update and Render
     Timer updateTimer = new Timer.periodic(new Duration(microseconds: (1000.0 * DT).round()), update);
@@ -83,10 +94,26 @@ void update(Timer timer) {
     if (player.grounded && (isKeyPressed(SPACEBAR_KEY) || isKeyPressed(W_KEY))) {
         player.jump();
     }
+    if (isKeyPressed(LEFT_KEY)) {
+        player.attack(Direction.LEFT);
+    }
+    if (isKeyPressed(UP_KEY)) {
+        player.attack(Direction.UP);
+    }
+    if (isKeyPressed(RIGHT_KEY)) {
+        player.attack(Direction.RIGHT);
+    }
+    if (isKeyPressed(DOWN_KEY)) {
+        player.attack(Direction.DOWN);
+    }
 
     for (Entity e in entities) {
         e.update(DT);
     }
+    for (Entity e in entitiesPendingRemoval) {
+        entities.remove(e);
+    }
+    entitiesPendingRemoval.clear();
 }
 
 Vector offset = new Vector.zero();
@@ -133,6 +160,7 @@ class Assets {
     static final int TILE_COUNT = 2;
     static final Map<int, ImageElement> tileSprites = {};
     static final ImageElement playerSprite = new ImageElement();
+    static final ImageElement idiotEnemySprite = new ImageElement();
 
     static void load() async {
         // Tiles
@@ -144,6 +172,10 @@ class Assets {
         // Player
         playerSprite.src = "assets/entities/player.gif";
         await playerSprite.onLoad.first;
+
+        // Idiot Enemy
+        idiotEnemySprite.src = "assets/entities/idiotEnemy.png";
+        await idiotEnemySprite.onLoad.first;
     }
 }
 
@@ -175,6 +207,10 @@ class Tile {
                           this.boundingBox.y + offset.y);
         }
     }
+}
+
+enum Direction {
+    UP, RIGHT, DOWN, LEFT
 }
 
 abstract class Entity {
@@ -222,6 +258,27 @@ abstract class Entity {
         return false;
     }
 
+    List<Entity> getCollidingEntities() {
+        List<Entity> collidingEntities = [];
+        for (Entity e in entities) {
+            if (e == this) {
+                continue;
+            }
+            if (this.boundingBox.intersects(e.boundingBox)) {
+                collidingEntities.add(e);
+            }
+        }
+        return collidingEntities;
+    }
+
+    num distanceSqToEntity(Entity other) {
+        return pow(this.boundingBox.x - other.boundingBox.x, 2) + pow(this.boundingBox.y - other.boundingBox.y, 2);
+    }
+
+    void die() {
+        entitiesPendingRemoval.add(this);
+    }
+
     void update(num delta) {
         this.updatePosition(delta);
     }
@@ -238,13 +295,15 @@ abstract class Entity {
     }
 }
 
-class LivingEntity extends Entity {
+abstract class LivingEntity extends Entity {
+    Direction direction;
     num speed, jumpPower;
     bool grounded;
 
     LivingEntity(ImageElement sprite,
                  BoundingBox boundingBox,
                  Vector initialVelocity,
+                 this.direction,
                  this.speed,
                  this.jumpPower)
         : super(sprite, boundingBox, initialVelocity)
@@ -254,15 +313,19 @@ class LivingEntity extends Entity {
 
     void moveLeft() {
         this.velocity.x -= speed;
+        this.direction = Direction.LEFT;
     }
 
     void moveRight() {
         this.velocity.x += speed;
+        this.direction = Direction.RIGHT;
     }
 
     void jump() {
         this.velocity.y -= this.jumpPower;
     }
+
+    void attack(Direction d) {}
 
     void update(num delta) {
         this.velocity.y += GRAVITY * (delta / 1000);
@@ -293,15 +356,86 @@ class LivingEntity extends Entity {
 }
 
 class Player extends LivingEntity {
-    Player(BoundingBox boundingBox, num speed, num jumpPower)
+    num attackReach;
+
+    Player(BoundingBox boundingBox,
+           Direction initialDirection,
+           num speed,
+           num jumpPower,
+           this.attackReach)
         : super(Assets.playerSprite,
                 boundingBox,
                 new Vector.zero(),
+                initialDirection,
                 speed,
                 jumpPower);
 
+    // TODO initial positions
+    void die() {
+        this.velocity = new Vector.zero();
+        this.boundingBox.x = Tile.SIZE;
+        this.boundingBox.y = Tile.SIZE;
+    }
+
+    void attack(Direction d) {
+        for (Entity e in entities) {
+            if (this.distanceSqToEntity(e) < pow(this.attackReach, 2)) {
+                if (d == Direction.UP && this.boundingBox.y >= e.boundingBox.bottom
+                    || d == Direction.RIGHT && this.boundingBox.right <= e.boundingBox.x
+                    || d == Direction.DOWN && this.boundingBox.bottom <= e.boundingBox.y
+                    || d == Direction.LEFT && this.boundingBox.x >= e.boundingBox.right) {
+                    e.die();
+                }
+            }
+        }
+    }
+
+    void update(num delta) {
+        super.update(delta);
+        if (this.boundingBox.y > canvas.height) {
+            this.die();
+        }
+    }
+
     void render(Vector offset) {
         ctx.drawImage(this.sprite, min(canvas.width / 2, this.boundingBox.x), this.boundingBox.y);
+    }
+}
+
+class IdiotEnemy extends LivingEntity {
+    bool movingLeft;
+
+    IdiotEnemy(BoundingBox boundingBox, num speed, num jumpPower)
+        : super(Assets.idiotEnemySprite,
+                boundingBox,
+                new Vector.zero(),
+                Direction.LEFT,
+                speed,
+                jumpPower)
+    {
+        this.movingLeft = randomizer.nextInt(2) == 1;
+    }
+
+    void attack(Direction d) {
+        List<Entity> collidingEntities = this.getCollidingEntities();
+        for (Entity e in collidingEntities) {
+            if (e == player) {
+                e.die();
+            }
+        }
+    }
+
+    void update(num delta) {
+        if (this.velocity.x == 0) {
+            if (this.movingLeft) {
+                this.moveRight();
+           } else {
+                this.moveLeft();
+            }
+            this.movingLeft = !this.movingLeft;
+        }
+        this.attack(null);
+        super.update(delta);
     }
 }
 
