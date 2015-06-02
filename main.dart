@@ -11,7 +11,7 @@ const int X_COLLISION_MASK = 1;
 // 0b10
 const int Y_COLLISION_MASK = 2;
 
-const int RENDER_DISTANCE = 10;
+const int RENDER_DISTANCE = 20;
 
 const int SPACEBAR_KEY = 32;
 
@@ -58,12 +58,14 @@ void startGame() async {
     ctx = canvas.getContext("2d");
 
     List<List<int>> map = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0],
+        [0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
     ];
 
     for (int r = 0; r < map.length; r++) {
@@ -157,7 +159,7 @@ Tile tileFromCoordinate(num x, num y) {
 }
 
 class Assets {
-    static final int TILE_COUNT = 2;
+    static final int TILE_COUNT = 3;
     static final Map<int, ImageElement> tileSprites = {};
     static final ImageElement playerSprite = new ImageElement();
     static final ImageElement idiotEnemySprite = new ImageElement();
@@ -165,23 +167,23 @@ class Assets {
     static void load() async {
         // Tiles
         for (int i = 1; i <= TILE_COUNT; i++) {
-            tileSprites[i] = new ImageElement(src: "assets/tiles/tile${i}.png");
+            tileSprites[i] = new ImageElement(src: "assets/tiles/tile${i}.png?v=0");
             await tileSprites[i].onLoad.first;
         }
 
         // Player
-        playerSprite.src = "assets/entities/player.gif";
+        playerSprite.src = "assets/entities/player.gif?v=0";
         await playerSprite.onLoad.first;
 
         // Idiot Enemy
-        idiotEnemySprite.src = "assets/entities/idiotEnemy.png";
+        idiotEnemySprite.src = "assets/entities/idiotEnemy.png?v=0";
         await idiotEnemySprite.onLoad.first;
     }
 }
 
 class Tile {
     static const int SIZE = 128;
-    static const List<int> BLOCKED_TYPES = const [1];
+    static const List<int> BLOCKED_TYPES = const [1, 2];
 
     final int type;
     final bool isBlocked;
