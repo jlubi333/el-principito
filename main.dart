@@ -1,10 +1,9 @@
 import "dart:html";
+import "dart:convert";
 import "dart:math";
 import "dart:async";
 
 const num DT = 1000 / 60;
-
-const num GRAVITY = Tile.SIZE * 40;
 
 // 0b01
 const int X_COLLISION_MASK = 1;
@@ -24,6 +23,13 @@ const int A_KEY = 65;
 const int D_KEY = 68;
 const int W_KEY = 87;
 
+Map<String, Direction> directionFromString = {
+    "UP": Direction.UP,
+    "RIGHT": Direction.RIGHT,
+    "DOWN": Direction.DOWN,
+    "LEFT": Direction.LEFT
+};
+
 Random randomizer = new Random();
 
 Map<int, bool> keys = {};
@@ -31,11 +37,7 @@ Map<int, bool> keys = {};
 CanvasElement canvas;
 CanvasRenderingContext2D ctx;
 
-List<List<Tile>> tiles = [];
-
-List<Entity> entities = [];
-List<Entity> entitiesPendingRemoval = [];
-Player player;
+Level level;
 
 void main() async {
     await startGame();
@@ -52,36 +54,15 @@ void startGame() async {
 
     await Assets.load();
 
+    level = await Level.loadFromFile("level1.json");
+
     canvas = querySelector("#game");
     ctx = canvas.getContext("2d");
-
-    List<List<int>> map = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 1, 1, 0, 0],
-        [0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1],
-        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 1, 2, 2],
-        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 1, 0, 0, 2, 2, 2, 2],
-    ];
-
-    for (int r = 0; r < map.length; r++) {
-        tiles.add([]);
-        for (int c = 0; c < map[r].length; c++) {
-            tiles[r].add(new Tile(map[r][c], r, c));
-        }
-    }
 
     window.onResize.listen((Event e) {
         resizeCanvas();
     });
     resizeCanvas();
-
-    player = new Player(new BoundingBox(34 * Tile.SIZE, 4 * Tile.SIZE, Tile.SIZE, Tile.SIZE), Direction.RIGHT, Tile.SIZE * 6, Tile.SIZE * 15, Tile.SIZE * 1.5);
-    entities.add(player);
-
-    entities.add(new IdiotEnemy(new BoundingBox(Tile.SIZE * 5, Tile.SIZE, Tile.SIZE, Tile.SIZE), Tile.SIZE * 0.5, Tile.SIZE * 1));
 
     // Update and Render
     Timer updateTimer = new Timer.periodic(new Duration(microseconds: (1000.0 * DT).round()), update);
@@ -89,36 +70,36 @@ void startGame() async {
 }
 
 void update(Timer timer) {
-    player.velocity.x = 0;
+    level.player.velocity.x = 0;
     if (isKeyPressed(A_KEY)) {
-        player.moveLeft();
+        level.player.moveLeft();
     }
     if (isKeyPressed(D_KEY)) {
-        player.moveRight();
+        level.player.moveRight();
     }
-    if (player.grounded && (isKeyPressed(SPACEBAR_KEY) || isKeyPressed(W_KEY))) {
-        player.jump();
+    if (level.player.grounded && (isKeyPressed(SPACEBAR_KEY) || isKeyPressed(W_KEY))) {
+        level.player.jump();
     }
     if (isKeyPressed(LEFT_KEY)) {
-        player.attack(Direction.LEFT);
+        level.player.attack(Direction.LEFT);
     }
     if (isKeyPressed(UP_KEY)) {
-        player.attack(Direction.UP);
+        level.player.attack(Direction.UP);
     }
     if (isKeyPressed(RIGHT_KEY)) {
-        player.attack(Direction.RIGHT);
+        level.player.attack(Direction.RIGHT);
     }
     if (isKeyPressed(DOWN_KEY)) {
-        player.attack(Direction.DOWN);
+        level.player.attack(Direction.DOWN);
     }
 
-    for (Entity e in entities) {
+    for (Entity e in level.entities) {
         e.update(DT);
     }
-    for (Entity e in entitiesPendingRemoval) {
-        entities.remove(e);
+    for (Entity e in level.entitiesPendingRemoval) {
+        level.entities.remove(e);
     }
-    entitiesPendingRemoval.clear();
+    level.entitiesPendingRemoval.clear();
 }
 
 Vector offset = new Vector.zero();
@@ -132,23 +113,23 @@ void render(num timestamp) {
     ctx.restore();
 
     // TODO CLAMPING
-    if (player.boundingBox.cx < scaledCanvasWidth() / 2) {
+    if (level.player.boundingBox.cx < scaledCanvasWidth() / 2) {
         offset.x = 0;
-    } else if (player.boundingBox.cx > worldWidth() - scaledCanvasWidth() / 2) {
+    } else if (level.player.boundingBox.cx > worldWidth() - scaledCanvasWidth() / 2) {
         offset.x = scaledCanvasWidth() - worldWidth();
     } else {
-        offset.x = scaledCanvasWidth() / 2 - player.boundingBox.cx;
+        offset.x = scaledCanvasWidth() / 2 - level.player.boundingBox.cx;
     }
     offset.y = 0;
 
-    pt = player.tile != null ? player.tile : pt;
-    for (int r = max(pt.row - RENDER_DISTANCE, 0); r <= min(pt.row + RENDER_DISTANCE, tiles.length - 1); r++) {
-        for (int c = max(pt.col - RENDER_DISTANCE, 0); c <= min(pt.col + RENDER_DISTANCE, tiles[r].length - 1); c++) {
-            tiles[r][c].render(offset);
+    pt = level.player.tile != null ? level.player.tile : pt;
+    for (int r = max(pt.row - RENDER_DISTANCE, 0); r <= min(pt.row + RENDER_DISTANCE, level.map.length - 1); r++) {
+        for (int c = max(pt.col - RENDER_DISTANCE, 0); c <= min(pt.col + RENDER_DISTANCE, level.map[r].length - 1); c++) {
+            level.map[r][c].render(offset);
         }
     }
 
-    for (Entity e in entities) {
+    for (Entity e in level.entities) {
         e.render(offset);
     }
 
@@ -156,11 +137,11 @@ void render(num timestamp) {
 }
 
 num worldHeight() {
-    return tiles.length * Tile.SIZE;
+    return level.map.length * Tile.SIZE;
 }
 
 num worldWidth() {
-    return tiles[0].length * Tile.SIZE;
+    return level.map[0].length * Tile.SIZE;
 }
 
 num scaledCanvasWidth() {
@@ -183,10 +164,10 @@ Tile tileFromCoordinate(num x, num y) {
     int row = y ~/ Tile.SIZE;
     int col = x ~/ Tile.SIZE;
 
-    if (row >= tiles.length || row < 0 || col >= tiles[row].length || col < 0) {
+    if (row >= level.map.length || row < 0 || col >= level.map[row].length || col < 0) {
         return null;
     } else {
-        return tiles[row][col];
+        return level.map[row][col];
     }
 }
 
@@ -210,6 +191,58 @@ class Assets {
         // Idiot Enemy
         idiotEnemySprite.src = "assets/entities/idiotEnemy.png?v=0";
         await idiotEnemySprite.onLoad.first;
+    }
+}
+
+class Level {
+    String name;
+    num gravity;
+    List<List<Tile>> map;
+    List<Entity> entities;
+    List<Entity> entitiesPendingRemoval = [];
+    Player player;
+
+    Level(this.name, this.gravity, this.map, this.entities, this.player);
+
+    static Level loadFromFile(String fileName) async {
+        String url = "assets/levels/" + fileName;
+        String jsonString = await HttpRequest.getString(url);
+        Map levelData = JSON.decode(jsonString);
+
+        String name = levelData["name"];
+        num gravity = levelData["gravity"] * Tile.SIZE;
+
+        List<List<Tile>> map = [];
+        for (int r = 0; r < levelData["map"].length; r++) {
+            map.add([]);
+            for (int c = 0; c < levelData["map"][r].length; c++) {
+                map[r].add(new Tile(levelData["map"][r][c], r, c));
+            }
+        }
+
+        List<Entity> entities = [];
+
+        Entity e;
+        for (Map enemyData in levelData["enemies"]) {
+            if (enemyData["class"] == "RebounderEnemy") {
+                e = new RebounderEnemy(new Vector(
+                    enemyData["x"] * Tile.SIZE,
+                    enemyData["y"] * Tile.SIZE
+                ));
+            }
+            entities.add(e);
+        }
+
+        Player player = new Player(
+            new Vector(
+                levelData["playerData"]["x"] * Tile.SIZE,
+                levelData["playerData"]["y"] * Tile.SIZE
+            ),
+            directionFromString[levelData["initialDirection"]]
+        );
+        entities.add(player);
+
+        return new Level(name, gravity, map, entities, player);
     }
 }
 
@@ -294,7 +327,7 @@ abstract class Entity {
 
     List<Entity> getCollidingEntities() {
         List<Entity> collidingEntities = [];
-        for (Entity e in entities) {
+        for (Entity e in level.entities) {
             if (e == this) {
                 continue;
             }
@@ -310,7 +343,7 @@ abstract class Entity {
     }
 
     void die() {
-        entitiesPendingRemoval.add(this);
+        level.entitiesPendingRemoval.add(this);
     }
 
     void update(num delta) {
@@ -358,7 +391,7 @@ abstract class LivingEntity extends Entity {
     void attack(Direction d) {}
 
     void update(num delta) {
-        this.velocity.y += GRAVITY * (delta / 1000);
+        this.velocity.y += level.gravity * (delta / 1000);
 
         // Tile Collision
         this.boundingBox.x += this.velocity.x * (delta / 1000);
@@ -390,29 +423,29 @@ abstract class LivingEntity extends Entity {
 }
 
 class Player extends LivingEntity {
-    num attackReach;
+    Vector spawnPosition;
+    num attackReach = 1.5 * Tile.SIZE;
 
-    Player(BoundingBox boundingBox,
-           Direction initialDirection,
-           num speed,
-           num jumpPower,
-           this.attackReach)
+    Player(Vector position,
+           Direction initialDirection)
         : super(Assets.playerSprite,
-                boundingBox,
+                new BoundingBox(position.x, position.y, 1 * Tile.SIZE, 1 * Tile.SIZE),
                 new Vector.zero(),
                 initialDirection,
-                speed,
-                jumpPower);
+                6 * Tile.SIZE,
+                15 * Tile.SIZE)
+    {
+        this.spawnPosition = position;
+    }
 
-    // TODO initial positions
     void die() {
         this.velocity = new Vector.zero();
-        this.boundingBox.x = Tile.SIZE;
-        this.boundingBox.y = Tile.SIZE;
+        this.boundingBox.x = this.spawnPosition.x;
+        this.boundingBox.y = this.spawnPosition.y;
     }
 
     void attack(Direction d) {
-        for (Entity e in entities) {
+        for (Entity e in level.entities) {
             if (this.distanceSqToEntity(e) < pow(this.attackReach, 2)) {
                 if (d == Direction.UP && this.boundingBox.y >= e.boundingBox.bottom
                     || d == Direction.RIGHT && this.boundingBox.right <= e.boundingBox.x
@@ -429,16 +462,16 @@ class Player extends LivingEntity {
     }
 }
 
-class IdiotEnemy extends LivingEntity {
+class RebounderEnemy extends LivingEntity {
     bool movingLeft;
 
-    IdiotEnemy(BoundingBox boundingBox, num speed, num jumpPower)
+    RebounderEnemy(Vector position)
         : super(Assets.idiotEnemySprite,
-                boundingBox,
+                new BoundingBox(position.x, position.y, 1 * Tile.SIZE, 1 * Tile.SIZE),
                 new Vector.zero(),
                 Direction.LEFT,
-                speed,
-                jumpPower)
+                0.5 * Tile.SIZE,
+                1 * Tile.SIZE)
     {
         this.movingLeft = randomizer.nextInt(2) == 1;
     }
@@ -446,7 +479,7 @@ class IdiotEnemy extends LivingEntity {
     void attack(Direction d) {
         List<Entity> collidingEntities = this.getCollidingEntities();
         for (Entity e in collidingEntities) {
-            if (e == player) {
+            if (e == level.player) {
                 e.die();
             }
         }
