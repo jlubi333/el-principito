@@ -53,19 +53,17 @@ void startGame() async {
     await Assets.load();
 
     canvas = querySelector("#game");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
     ctx = canvas.getContext("2d");
 
     List<List<int>> map = [
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 0, 1, 1, 0, 0],
         [0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2, 1, 1],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1],
+        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 1, 2, 2],
+        [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 1, 0, 0, 2, 2, 2, 2],
     ];
 
     for (int r = 0; r < map.length; r++) {
@@ -75,7 +73,12 @@ void startGame() async {
         }
     }
 
-    player = new Player(new BoundingBox(Tile.SIZE, Tile.SIZE, Tile.SIZE, Tile.SIZE), Direction.RIGHT, Tile.SIZE * 6, Tile.SIZE * 15, Tile.SIZE * 1.5);
+    window.onResize.listen((Event e) {
+        resizeCanvas();
+    });
+    resizeCanvas();
+
+    player = new Player(new BoundingBox(34 * Tile.SIZE, 4 * Tile.SIZE, Tile.SIZE, Tile.SIZE), Direction.RIGHT, Tile.SIZE * 6, Tile.SIZE * 15, Tile.SIZE * 1.5);
     entities.add(player);
 
     entities.add(new IdiotEnemy(new BoundingBox(Tile.SIZE * 5, Tile.SIZE, Tile.SIZE, Tile.SIZE), Tile.SIZE * 0.5, Tile.SIZE * 1));
@@ -122,10 +125,20 @@ Vector offset = new Vector.zero();
 Tile pt;
 void render(num timestamp) {
     // Clear
+    ctx.save();
     ctx.fillStyle = "#00C6FF";
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
-    offset.x = min(canvas.width / 2 - player.boundingBox.x, 0);
+    // TODO CLAMPING
+    if (player.boundingBox.cx < scaledCanvasWidth() / 2) {
+        offset.x = 0;
+    } else if (player.boundingBox.cx > worldWidth() - scaledCanvasWidth() / 2) {
+        offset.x = scaledCanvasWidth() - worldWidth();
+    } else {
+        offset.x = scaledCanvasWidth() / 2 - player.boundingBox.cx;
+    }
     offset.y = 0;
 
     pt = player.tile != null ? player.tile : pt;
@@ -142,9 +155,28 @@ void render(num timestamp) {
     window.animationFrame.then(render);
 }
 
+num worldHeight() {
+    return tiles.length * Tile.SIZE;
+}
+
+num worldWidth() {
+    return tiles[0].length * Tile.SIZE;
+}
+
+num scaledCanvasWidth() {
+    return canvas.width * worldHeight() / canvas.height;
+}
+
 bool isKeyPressed(int keyCode) {
     // Cannot just return keys[keyCode] because it may be null.
     return keys[keyCode] == true;
+}
+
+void resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    num s = canvas.height / worldHeight();
+    ctx.scale(s, s);
 }
 
 Tile tileFromCoordinate(num x, num y) {
@@ -282,10 +314,6 @@ abstract class Entity {
     }
 
     void update(num delta) {
-        this.updatePosition(delta);
-    }
-
-    void updatePosition(num delta) {
         this.boundingBox.x += this.velocity.x * (delta / 1000);
         this.boundingBox.y += this.velocity.y * (delta / 1000);
     }
@@ -354,6 +382,10 @@ abstract class LivingEntity extends Entity {
             }
             this.velocity.y = 0;
         }
+
+        if (this.boundingBox.y > worldHeight()) {
+            this.die();
+        }
     }
 }
 
@@ -394,13 +426,6 @@ class Player extends LivingEntity {
 
     void update(num delta) {
         super.update(delta);
-        if (this.boundingBox.y > canvas.height) {
-            this.die();
-        }
-    }
-
-    void render(Vector offset) {
-        ctx.drawImage(this.sprite, min(canvas.width / 2, this.boundingBox.x), this.boundingBox.y);
     }
 }
 
@@ -453,6 +478,8 @@ class BoundingBox {
 
     num get right => this.x + this.width;
     num get bottom => this.y + this.height;
+    num get cx => this.x + this.width / 2;
+    num get cy => this.y + this.height / 2;
 
     BoundingBox(this.x, this.y, this.width, this.height);
 
