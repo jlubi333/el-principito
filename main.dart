@@ -77,7 +77,11 @@ void startGame() async {
     window.animationFrame.then(render);
 }
 
+num jumpTimer = 0;
 void update(Timer timer) {
+    jumpTimer += DT;
+
+    // Running
     level.player.velocity.x = 0;
     if (isKeyPressed(A_KEY)) {
         level.player.moveLeft();
@@ -85,9 +89,14 @@ void update(Timer timer) {
     if (isKeyPressed(D_KEY)) {
         level.player.moveRight();
     }
-    if (level.player.grounded && (isKeyPressed(SPACEBAR_KEY) || isKeyPressed(W_KEY))) {
+
+    // Jumping
+    if (level.player.grounded && (isKeyPressed(SPACEBAR_KEY) || isKeyPressed(W_KEY)) && jumpTimer > 100) {
         level.player.jump();
+        jumpTimer = 0;
     }
+
+    // Attacking
     if (isKeyPressed(LEFT_KEY)) {
         level.player.attack(Direction.LEFT);
     }
@@ -101,6 +110,7 @@ void update(Timer timer) {
         level.player.attack(Direction.DOWN);
     }
 
+    // Updating
     for (Entity e in level.entities) {
         e.update(DT);
     }
@@ -184,36 +194,36 @@ class Assets {
     static const int LEVEL_COUNT = 1;
 
     static final Map<String, Sound> sounds = {};
-
     static final Map<int, ImageElement> tileSprites = {};
-
-    static final ImageElement playerSprite = new ImageElement();
-    static final ImageElement idiotEnemySprite = new ImageElement();
-
+    static final Map<String, ImageElement> entitySprites = {};
     static final Map<int, Level> levels = {};
-
 
     static void load() async {
         // Sounds
-        sounds["valse"] = await Sound.loadFromFile("assets/sounds/valse.ogg");
+        sounds["Valse"] = await Sound.loadFromFile("assets/sounds/Valse.ogg");
+        sounds["Jump"] = await Sound.loadFromFile("assets/sounds/Jump.wav");
+        sounds["Death"] = await Sound.loadFromFile("assets/sounds/Death.wav");
+        sounds["PlayerDeath"] = await Sound.loadFromFile("assets/sounds/PlayerDeath.wav");
 
         // Tiles
         for (int i = 1; i <= TILE_COUNT; i++) {
-            tileSprites[i] = new ImageElement(src: "assets/tiles/tile${i}.png?v=0");
+            tileSprites[i] = new ImageElement(src: "assets/tiles/Tile${i}.png?v=0");
             await tileSprites[i].onLoad.first;
         }
 
         // Player
-        playerSprite.src = "assets/entities/player.gif?v=0";
-        await playerSprite.onLoad.first;
+        entitySprites["Player"] = new ImageElement();
+        entitySprites["Player"].src = "assets/entities/Player.gif?v=0";
+        await entitySprites["Player"].onLoad.first;
 
         // Idiot Enemy
-        idiotEnemySprite.src = "assets/entities/idiotEnemy.png?v=0";
-        await idiotEnemySprite.onLoad.first;
+        entitySprites["RebounderEnemy"] = new ImageElement();
+        entitySprites["RebounderEnemy"].src = "assets/entities/RebounderEnemy.png?v=0";
+        await entitySprites["RebounderEnemy"].onLoad.first;
 
         // Levels
         for (int i = 0; i < LEVEL_COUNT; i++) {
-            levels[i] = await Level.loadFromFile("assets/levels/level${i}.json?v=0");
+            levels[i] = await Level.loadFromFile("assets/levels/Level${i}.json?v=1");
         }
     }
 }
@@ -427,6 +437,7 @@ abstract class Entity {
 
     void die() {
         level.entitiesPendingRemoval.add(this);
+        Assets.sounds["Death"].play(volume: 0.1);
     }
 
     void update(num delta) {
@@ -511,7 +522,7 @@ class Player extends LivingEntity {
 
     Player(Vector position,
            Direction initialDirection)
-        : super(Assets.playerSprite,
+        : super(Assets.entitySprites["Player"],
                 new BoundingBox(position.x, position.y, 1 * Tile.SIZE, 1 * Tile.SIZE),
                 new Vector.zero(),
                 initialDirection,
@@ -525,6 +536,12 @@ class Player extends LivingEntity {
         this.velocity = new Vector.zero();
         this.boundingBox.x = this.spawnPosition.x;
         this.boundingBox.y = this.spawnPosition.y;
+        Assets.sounds["PlayerDeath"].play(volume: 0.1);
+    }
+
+    void jump() {
+        super.jump();
+        Assets.sounds["Jump"].play(volume: 0.1);
     }
 
     void attack(Direction d) {
@@ -539,17 +556,13 @@ class Player extends LivingEntity {
             }
         }
     }
-
-    void update(num delta) {
-        super.update(delta);
-    }
 }
 
 class RebounderEnemy extends LivingEntity {
     bool movingLeft;
 
     RebounderEnemy(Vector position)
-        : super(Assets.idiotEnemySprite,
+        : super(Assets.entitySprites["RebounderEnemy"],
                 new BoundingBox(position.x, position.y, 1 * Tile.SIZE, 1 * Tile.SIZE),
                 new Vector.zero(),
                 Direction.LEFT,

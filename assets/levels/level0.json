@@ -1,6 +1,6 @@
 {
     "name": "World I",
-    "backgroundMusic": "valse",
+    "backgroundMusic": "Valse",
     "gravity": 40,
     "map": [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
