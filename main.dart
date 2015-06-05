@@ -2,6 +2,7 @@ import "dart:html";
 import "dart:convert";
 import "dart:math";
 import "dart:async";
+import "dart:web_audio";
 
 const num DT = 1000 / 60;
 
@@ -54,7 +55,8 @@ void startGame() async {
 
     await Assets.load();
 
-    level = await Level.loadFromFile("level1.json");
+    level = Assets.levels[0];
+    level.backgroundMusic.play(loop: true);
 
     canvas = querySelector("#game");
     ctx = canvas.getContext("2d");
@@ -172,12 +174,23 @@ Tile tileFromCoordinate(num x, num y) {
 }
 
 class Assets {
-    static final int TILE_COUNT = 3;
+    static const int TILE_COUNT = 3;
+    static const int LEVEL_COUNT = 1;
+
+    static final Map<String, Sound> sounds = {};
+
     static final Map<int, ImageElement> tileSprites = {};
+
     static final ImageElement playerSprite = new ImageElement();
     static final ImageElement idiotEnemySprite = new ImageElement();
 
+    static final Map<int, Level> levels = {};
+
+
     static void load() async {
+        // Sounds
+        sounds["valse"] = await Sound.loadFromFile("assets/sounds/valse.ogg");
+
         // Tiles
         for (int i = 1; i <= TILE_COUNT; i++) {
             tileSprites[i] = new ImageElement(src: "assets/tiles/tile${i}.png?v=0");
@@ -191,25 +204,70 @@ class Assets {
         // Idiot Enemy
         idiotEnemySprite.src = "assets/entities/idiotEnemy.png?v=0";
         await idiotEnemySprite.onLoad.first;
+
+        // Levels
+        for (int i = 0; i < LEVEL_COUNT; i++) {
+            levels[i] = await Level.loadFromFile("assets/levels/level${i}.json?v=0");
+        }
+    }
+}
+
+class Sound {
+    static final AudioContext audioContext = new AudioContext();
+
+    AudioBuffer audioBuffer;
+
+    Sound(this.audioBuffer);
+
+    static Sound loadFromFile(String url) async {
+        HttpRequest soundRequest = new HttpRequest();
+        soundRequest.open("GET", url);
+        soundRequest.responseType = "arraybuffer";
+        soundRequest.send();
+
+        await soundRequest.onLoad.first;
+
+        AudioBuffer audioBuffer = await audioContext.decodeAudioData(soundRequest.response);
+
+        return new Sound(audioBuffer);
+    }
+
+    void play({num volume: 1, bool loop: false}) {
+        if (this.audioBuffer == null) {
+            return;
+        }
+        AudioBufferSourceNode source = audioContext.createBufferSource();
+        GainNode gainNode = audioContext.createGain();
+
+        source.buffer = this.audioBuffer;
+        source.loop = loop;
+
+        source.connectNode(gainNode);
+        gainNode.connectNode(audioContext.destination);
+
+        gainNode.gain.value = volume;
+
+        source.start(0);
     }
 }
 
 class Level {
     String name;
+    Sound backgroundMusic;
     num gravity;
     List<List<Tile>> map;
     List<Entity> entities;
     List<Entity> entitiesPendingRemoval = [];
     Player player;
 
-    Level(this.name, this.gravity, this.map, this.entities, this.player);
+    Level(this.name, this.backgroundMusic, this.gravity, this.map, this.entities, this.player);
 
-    static Level loadFromFile(String fileName) async {
-        String url = "assets/levels/" + fileName;
+    static Level loadFromFile(String url) async {
         String jsonString = await HttpRequest.getString(url);
         Map levelData = JSON.decode(jsonString);
 
         String name = levelData["name"];
+        Sound backgroundMusic = Assets.sounds[levelData["backgroundMusic"]];
         num gravity = levelData["gravity"] * Tile.SIZE;
 
         List<List<Tile>> map = [];
@@ -242,7 +300,7 @@ class Level {
         );
         entities.add(player);
 
-        return new Level(name, gravity, map, entities, player);
+        return new Level(name, backgroundMusic, gravity, map, entities, player);
     }
 }
 
