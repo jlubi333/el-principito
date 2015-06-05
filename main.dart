@@ -24,6 +24,8 @@ const int A_KEY = 65;
 const int D_KEY = 68;
 const int W_KEY = 87;
 
+const int M_KEY = 77;
+
 Map<String, Direction> directionFromString = {
     "UP": Direction.UP,
     "RIGHT": Direction.RIGHT,
@@ -47,6 +49,10 @@ void main() async {
 void startGame() async {
     window.onKeyDown.listen((KeyboardEvent e) {
         keys[e.keyCode] = true;
+
+        if (e.keyCode == M_KEY) {
+            level.backgroundMusic.toggle();
+        }
     });
 
     window.onKeyUp.listen((KeyboardEvent e) {
@@ -216,6 +222,9 @@ class Sound {
     static final AudioContext audioContext = new AudioContext();
 
     AudioBuffer audioBuffer;
+    AudioBufferSourceNode source = null;
+    GainNode gainNode = null;
+    bool playing = false;
 
     Sound(this.audioBuffer);
 
@@ -236,18 +245,34 @@ class Sound {
         if (this.audioBuffer == null) {
             return;
         }
-        AudioBufferSourceNode source = audioContext.createBufferSource();
-        GainNode gainNode = audioContext.createGain();
+        this.source = audioContext.createBufferSource();
+        this.gainNode = audioContext.createGain();
 
-        source.buffer = this.audioBuffer;
-        source.loop = loop;
+        this.source.buffer = this.audioBuffer;
+        this.source.loop = loop;
 
-        source.connectNode(gainNode);
-        gainNode.connectNode(audioContext.destination);
+        this.source.connectNode(gainNode);
+        this.gainNode.connectNode(audioContext.destination);
 
-        gainNode.gain.value = volume;
+        this.gainNode.gain.value = volume;
 
-        source.start(0);
+        this.source.start(0);
+        this.playing = true;
+    }
+
+    void stop() {
+        if (this.source != null) {
+            this.source.stop();
+        }
+        this.playing = false;
+    }
+
+    void toggle({num volume: 1, bool loop: false}) {
+        if (this.playing) {
+            this.stop();
+        } else {
+            this.play(volume: volume, loop: loop);
+        }
     }
 }
 
