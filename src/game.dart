@@ -16,12 +16,6 @@ void startGame() async {
     setupInputHandler();
     setupGraphics("#game");
 
-    window.onKeyDown.listen((KeyboardEvent e) {
-        if (e.keyCode == M_KEY) {
-            level.backgroundMusic.toggle();
-        }
-    });
-
     await Assets.load();
 
     level = Assets.levels[0];
@@ -35,6 +29,7 @@ void startGame() async {
     screen = new Screen([]);
     screen.elements.add(new UITextButton("Mute", "10px", "10px", "5%", "5%",
         (MouseEvent e) {
+            Sound.toggleMute();
             level.backgroundMusic.toggle();
         }
     ));

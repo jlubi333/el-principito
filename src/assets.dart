@@ -45,6 +45,8 @@ class Assets {
 class Sound {
     static final AudioContext audioContext = new AudioContext();
 
+    static bool mute = false;
+
     AudioBuffer audioBuffer;
     AudioBufferSourceNode source = null;
     GainNode gainNode = null;
@@ -65,10 +67,15 @@ class Sound {
         return new Sound(audioBuffer);
     }
 
+    static void toggleMute() {
+        mute = !mute;
+    }
+
     void play({num volume: 1, bool loop: false}) {
-        if (this.audioBuffer == null) {
+        if (this.audioBuffer == null || mute) {
             return;
         }
+
         this.source = audioContext.createBufferSource();
         this.gainNode = audioContext.createGain();
 
