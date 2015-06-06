@@ -42,4 +42,11 @@ class BoundingBox {
                 && this.y < other.bottom
                 && this.bottom > other.y);
     }
+
+    bool contains(Point p) {
+        return (p.x > this.x
+                && p.x < this.right
+                && p.y > this.y
+                && p.y < this.bottom);
+    }
 }

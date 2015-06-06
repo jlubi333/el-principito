@@ -4,20 +4,23 @@ import "dart:math";
 
 import "assets.dart";
 import "graphics.dart";
-import "input_handler.dart";
+import "input.dart";
 import "metrics.dart";
+import "ui.dart";
 import "world.dart";
 
 const num DT = 1000 / 60;
 const int RENDER_DISTANCE = 20;
 
 void startGame() async {
-    setupInputHandler((KeyboardEvent e) {
+    setupInputHandler();
+    setupGraphics("#game");
+
+    window.onKeyDown.listen((KeyboardEvent e) {
         if (e.keyCode == M_KEY) {
             level.backgroundMusic.toggle();
         }
-    }, (e) {});
-    setupGraphics("#game");
+    });
 
     await Assets.load();
 
@@ -28,6 +31,13 @@ void startGame() async {
         resizeCanvas();
     });
     resizeCanvas();
+
+    screen = new Screen([]);
+    screen.elements.add(new UITextButton("Mute", "10px", "10px", "5%", "5%",
+        (MouseEvent e) {
+            level.backgroundMusic.toggle();
+        }
+    ));
 
     // Update and Render
     Timer updateTimer = new Timer.periodic(new Duration(microseconds: (1000.0 * DT).round()), update);

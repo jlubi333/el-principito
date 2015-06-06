@@ -1,6 +1,7 @@
 import "dart:html";
 
-typedef int Handler(KeyboardEvent e);
+typedef void KeyboardHandler(KeyboardEvent e);
+typedef void ClickHandler(KeyboardEvent e);
 
 const int SPACEBAR_KEY = 32;
 
@@ -17,14 +18,12 @@ const int M_KEY = 77;
 
 Map<int, bool> keys = {};
 
-void setupInputHandler(Handler keyDownHandler, Handler keyUpHandler) {
+void setupInputHandler() {
     window.onKeyDown.listen((KeyboardEvent e) {
         keys[e.keyCode] = true;
-        keyDownHandler(e);
     });
 
     window.onKeyUp.listen((KeyboardEvent e) {
         keys[e.keyCode] = false;
-        keyUpHandler(e);
     });
 }
