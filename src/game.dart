@@ -12,13 +12,27 @@ import "world.dart";
 const num DT = 1000 / 60;
 const int RENDER_DISTANCE = 20;
 
+bool stop = true;
+
 void startGame() async {
+    // Only display if loading takes a long time.
+    // displayLoadingScreen();
+
     setupInputHandler();
     setupGraphics("#game");
 
     await Assets.load();
 
-    level = Assets.levels[0];
+    startMainMenu();
+}
+
+void startMainMenu() {
+    exitLevel();
+    displayMainMenuScreen();
+}
+
+void startLevel(int levelNumber) {
+    level = Assets.levelCreators[levelNumber]();
     level.backgroundMusic.play(loop: true);
 
     window.onResize.listen((Event e) {
@@ -26,21 +40,29 @@ void startGame() async {
     });
     resizeCanvas();
 
-    screen = new Screen([]);
-    screen.elements.add(new UITextButton("Mute", "10px", "10px", "5%", "5%",
-        (MouseEvent e) {
-            Sound.toggleMute();
-            level.backgroundMusic.toggle();
-        }
-    ));
+    displayLevelScreen();
 
     // Update and Render
+    stop = false;
     Timer updateTimer = new Timer.periodic(new Duration(microseconds: (1000.0 * DT).round()), update);
     window.animationFrame.then(render);
 }
 
+void exitLevel() {
+    if (level != null) {
+        level.backgroundMusic.stop();
+        level = null;
+    }
+    stop = true;
+}
+
 num jumpTimer = 0;
 void update(Timer timer) {
+    if (stop) {
+        timer.cancel();
+        return;
+    }
+
     jumpTimer += DT;
 
     // Running
@@ -85,6 +107,15 @@ void update(Timer timer) {
 Vector offset = new Vector.zero();
 Tile pt;
 void render(num timestamp) {
+    if (stop) {
+        ctx.save();
+        ctx.fillStyle = "#000000";
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        return;
+    }
+
     // Clear
     ctx.save();
     ctx.fillStyle = "#00C6FF";

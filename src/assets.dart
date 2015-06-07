@@ -10,7 +10,7 @@ class Assets {
     static final Map<String, Sound> sounds = {};
     static final Map<int, ImageElement> tileSprites = {};
     static final Map<String, ImageElement> entitySprites = {};
-    static final Map<int, Level> levels = {};
+    static final Map<int, LevelCreator> levelCreators = {};
 
     static void load() async {
         // Sounds
@@ -37,7 +37,7 @@ class Assets {
 
         // Levels
         for (int i = 0; i < LEVEL_COUNT; i++) {
-            levels[i] = await Level.loadFromFile("assets/levels/Level${i}.json?v=1");
+            levelCreators[i] = await Level.loadFromFile("assets/levels/Level${i}.json?v=1");
         }
     }
 }

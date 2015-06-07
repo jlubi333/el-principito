@@ -6,6 +6,8 @@ import "entities.dart";
 import "graphics.dart";
 import "metrics.dart";
 
+typedef Level LevelCreator();
+
 Level level;
 
 class Level {
@@ -19,45 +21,47 @@ class Level {
 
     Level(this.name, this.backgroundMusic, this.gravity, this.map, this.entities, this.player);
 
-    static Level loadFromFile(String url) async {
+    static LevelCreator loadFromFile(String url) async {
         String jsonString = await HttpRequest.getString(url);
         Map levelData = JSON.decode(jsonString);
 
-        String name = levelData["name"];
-        Sound backgroundMusic = Assets.sounds[levelData["backgroundMusic"]];
-        num gravity = levelData["gravity"] * Tile.SIZE;
+        return () {
+            String name = levelData["name"];
+            Sound backgroundMusic = Assets.sounds[levelData["backgroundMusic"]];
+            num gravity = levelData["gravity"] * Tile.SIZE;
 
-        List<List<Tile>> map = [];
-        for (int r = 0; r < levelData["map"].length; r++) {
-            map.add([]);
-            for (int c = 0; c < levelData["map"][r].length; c++) {
-                map[r].add(new Tile(levelData["map"][r][c], r, c));
+            List<List<Tile>> map = [];
+            for (int r = 0; r < levelData["map"].length; r++) {
+                map.add([]);
+                for (int c = 0; c < levelData["map"][r].length; c++) {
+                    map[r].add(new Tile(levelData["map"][r][c], r, c));
+                }
             }
-        }
 
-        List<Entity> entities = [];
+            List<Entity> entities = [];
 
-        Entity e;
-        for (Map enemyData in levelData["enemies"]) {
-            if (enemyData["class"] == "RebounderEnemy") {
-                e = new RebounderEnemy(new Vector(
-                    enemyData["x"] * Tile.SIZE,
-                    enemyData["y"] * Tile.SIZE
-                ));
+            Entity e;
+            for (Map enemyData in levelData["enemies"]) {
+                if (enemyData["class"] == "RebounderEnemy") {
+                    e = new RebounderEnemy(new Vector(
+                        enemyData["x"] * Tile.SIZE,
+                        enemyData["y"] * Tile.SIZE
+                    ));
+                }
+                entities.add(e);
             }
-            entities.add(e);
-        }
 
-        Player player = new Player(
-            new Vector(
-                levelData["playerData"]["x"] * Tile.SIZE,
-                levelData["playerData"]["y"] * Tile.SIZE
-            ),
-            directionFromString[levelData["initialDirection"]]
-        );
-        entities.add(player);
+            Player player = new Player(
+                new Vector(
+                    levelData["playerData"]["x"] * Tile.SIZE,
+                    levelData["playerData"]["y"] * Tile.SIZE
+                ),
+                directionFromString[levelData["initialDirection"]]
+            );
+            entities.add(player);
 
-        return new Level(name, backgroundMusic, gravity, map, entities, player);
+            return new Level(name, backgroundMusic, gravity, map, entities, player);
+        };
     }
 }
 
