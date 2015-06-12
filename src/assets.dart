@@ -1,6 +1,8 @@
 import "dart:html";
-import "dart:web_audio";
 
+import "controllers.dart";
+import "sound.dart";
+import "ui.dart";
 import "world.dart";
 
 class Assets {
@@ -9,6 +11,7 @@ class Assets {
     static const int LEVELS_PER_WORLD = 1;
 
     static final Map<String, Sound> sounds = {};
+    static final Map<String, UI> ui = {};
     static final Map<int, ImageElement> tileSprites = {};
     static final Map<String, ImageElement> entitySprites = {};
     static final Map<int, Map<int, LevelCreator>> levelCreators = {};
@@ -19,6 +22,13 @@ class Assets {
         sounds["Jump"] = await Sound.loadFromFile("assets/sounds/Jump.wav");
         sounds["Death"] = await Sound.loadFromFile("assets/sounds/Death.wav");
         sounds["PlayerDeath"] = await Sound.loadFromFile("assets/sounds/PlayerDeath.wav");
+
+        // UI
+        HtmlElement uiParent = querySelector("#ui");
+        ui["MainMenu"] = await UI.loadFromFile(uiParent, mainMenuController, "assets/ui/MainMenu.html");
+        ui["WorldSelect"] = await UI.loadFromFile(uiParent, worldSelectController, "assets/ui/WorldSelect.html");
+        ui["LevelSelect"] = await UI.loadFromFile(uiParent, levelSelectController, "assets/ui/LevelSelect.html");
+        ui["LevelControls"] = await UI.loadFromFile(uiParent, levelControlsController, "assets/ui/LevelControls.html");
 
         // Tiles
         for (int i = 1; i <= TILE_COUNT; i++) {
@@ -37,76 +47,12 @@ class Assets {
         await entitySprites["RebounderEnemy"].onLoad.first;
 
         // Levels
-        for (int w = 0; w < WORLD_COUNT; w++) {
+        for (int w = 1; w <= WORLD_COUNT; w++) {
             levelCreators[w] = {};
-            for (int i = 0; i < LEVELS_PER_WORLD; i++) {
-                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w + 1}/Level${i + 1}.json?v=0");
+            for (int i = 1; i <= LEVELS_PER_WORLD; i++) {
+                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w}/Level${i}.json?v=0");
             }
         }
     }
 }
 
-class Sound {
-    static final AudioContext audioContext = new AudioContext();
-
-    static bool mute = false;
-
-    AudioBuffer audioBuffer;
-    AudioBufferSourceNode source = null;
-    GainNode gainNode = null;
-    bool playing = false;
-
-    Sound(this.audioBuffer);
-
-    static Sound loadFromFile(String url) async {
-        HttpRequest soundRequest = new HttpRequest();
-        soundRequest.open("GET", url);
-        soundRequest.responseType = "arraybuffer";
-        soundRequest.send();
-
-        await soundRequest.onLoad.first;
-
-        AudioBuffer audioBuffer = await audioContext.decodeAudioData(soundRequest.response);
-
-        return new Sound(audioBuffer);
-    }
-
-    static void toggleMute() {
-        mute = !mute;
-    }
-
-    void play({num volume: 1, bool loop: false}) {
-        if (this.audioBuffer == null || mute) {
-            return;
-        }
-
-        this.source = audioContext.createBufferSource();
-        this.gainNode = audioContext.createGain();
-
-        this.source.buffer = this.audioBuffer;
-        this.source.loop = loop;
-
-        this.source.connectNode(gainNode);
-        this.gainNode.connectNode(audioContext.destination);
-
-        this.gainNode.gain.value = volume;
-
-        this.source.start(0);
-        this.playing = true;
-    }
-
-    void stop() {
-        if (this.source != null) {
-            this.source.stop();
-        }
-        this.playing = false;
-    }
-
-    void toggle({num volume: 1, bool loop: false}) {
-        if (this.playing) {
-            this.stop();
-        } else {
-            this.play(volume: volume, loop: loop);
-        }
-    }
-}

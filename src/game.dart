@@ -15,11 +15,8 @@ const int RENDER_DISTANCE = 20;
 bool stop = true;
 
 void startGame() async {
-    // Only display if loading takes a long time.
-    // displayLoadingScreen();
-
     setupInputHandler();
-    setupGraphics("#game");
+    setupGraphics(querySelector("#game"));
 
     await Assets.load();
 
@@ -28,7 +25,7 @@ void startGame() async {
 
 void startMainMenu() {
     exitLevel();
-    displayMainMenuScreen();
+    Assets.ui["MainMenu"].show();
 }
 
 void startLevel(LevelCreator lc) {
@@ -39,8 +36,6 @@ void startLevel(LevelCreator lc) {
         resizeCanvas();
     });
     resizeCanvas();
-
-    displayLevelScreen();
 
     // Update and Render
     stop = false;
