@@ -18,17 +18,17 @@ class Assets {
 
     static void load() async {
         // Sounds
-        sounds["Valse"] = await Sound.loadFromFile("assets/sounds/Valse.ogg");
-        sounds["Jump"] = await Sound.loadFromFile("assets/sounds/Jump.wav");
-        sounds["Death"] = await Sound.loadFromFile("assets/sounds/Death.wav");
-        sounds["PlayerDeath"] = await Sound.loadFromFile("assets/sounds/PlayerDeath.wav");
+        sounds["Valse"] = await Sound.loadFromFile("assets/sounds/Valse.ogg?v=0");
+        sounds["Jump"] = await Sound.loadFromFile("assets/sounds/Jump.wav?v=0");
+        sounds["Death"] = await Sound.loadFromFile("assets/sounds/Death.wav?v=0");
+        sounds["PlayerDeath"] = await Sound.loadFromFile("assets/sounds/PlayerDeath.wav?v=0");
 
         // UI
         HtmlElement uiParent = querySelector("#ui");
-        ui["MainMenu"] = await UI.loadFromFile(uiParent, mainMenuController, "assets/ui/MainMenu.html");
-        ui["WorldSelect"] = await UI.loadFromFile(uiParent, worldSelectController, "assets/ui/WorldSelect.html");
-        ui["LevelSelect"] = await UI.loadFromFile(uiParent, levelSelectController, "assets/ui/LevelSelect.html");
-        ui["LevelControls"] = await UI.loadFromFile(uiParent, levelControlsController, "assets/ui/LevelControls.html");
+        ui["MainMenu"] = await UI.loadFromFile(uiParent, mainMenuController, "assets/ui/MainMenu.html?v=0");
+        ui["WorldSelect"] = await UI.loadFromFile(uiParent, worldSelectController, "assets/ui/WorldSelect.html?v=0");
+        ui["LevelSelect"] = await UI.loadFromFile(uiParent, levelSelectController, "assets/ui/LevelSelect.html?v=0");
+        ui["LevelControls"] = await UI.loadFromFile(uiParent, levelControlsController, "assets/ui/LevelControls.html?v=0");
 
         // Tiles
         for (int i = 1; i <= TILE_COUNT; i++) {
