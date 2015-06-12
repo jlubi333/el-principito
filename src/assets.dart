@@ -5,12 +5,13 @@ import "world.dart";
 
 class Assets {
     static const int TILE_COUNT = 3;
-    static const int LEVEL_COUNT = 1;
+    static const int WORLD_COUNT = 1;
+    static const int LEVELS_PER_WORLD = 1;
 
     static final Map<String, Sound> sounds = {};
     static final Map<int, ImageElement> tileSprites = {};
     static final Map<String, ImageElement> entitySprites = {};
-    static final Map<int, LevelCreator> levelCreators = {};
+    static final Map<int, Map<int, LevelCreator>> levelCreators = {};
 
     static void load() async {
         // Sounds
@@ -36,8 +37,11 @@ class Assets {
         await entitySprites["RebounderEnemy"].onLoad.first;
 
         // Levels
-        for (int i = 0; i < LEVEL_COUNT; i++) {
-            levelCreators[i] = await Level.loadFromFile("assets/levels/Level${i}.json?v=1");
+        for (int w = 0; w < WORLD_COUNT; w++) {
+            levelCreators[w] = {};
+            for (int i = 0; i < LEVELS_PER_WORLD; i++) {
+                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w + 1}/Level${i + 1}.json?v=0");
+            }
         }
     }
 }

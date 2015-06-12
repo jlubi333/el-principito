@@ -31,8 +31,8 @@ void startMainMenu() {
     displayMainMenuScreen();
 }
 
-void startLevel(int levelNumber) {
-    level = Assets.levelCreators[levelNumber]();
+void startLevel(LevelCreator lc) {
+    level = lc();
     level.backgroundMusic.play(loop: true);
 
     window.onResize.listen((Event e) {
