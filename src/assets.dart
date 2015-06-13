@@ -7,8 +7,8 @@ import "world.dart";
 
 class Assets {
     static const int TILE_COUNT = 3;
-    static const int WORLD_COUNT = 1;
-    static const int LEVELS_PER_WORLD = 1;
+    static const int WORLD_COUNT = 3;
+    static const int LEVELS_PER_WORLD = 3;
 
     static final Map<String, Sound> sounds = {};
     static final Map<String, UI> ui = {};
@@ -50,7 +50,7 @@ class Assets {
         for (int w = 1; w <= WORLD_COUNT; w++) {
             levelCreators[w] = {};
             for (int i = 1; i <= LEVELS_PER_WORLD; i++) {
-                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w}/Level${i}.json?v=0");
+                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w}/Level${i}.json?v=1");
             }
         }
     }
