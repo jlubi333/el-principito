@@ -25,7 +25,8 @@ void levelSelectController(Element parent) {
         button.onMouseDown.listen((e) {
             int world = int.parse(button.dataset["world"]);
             int level = int.parse(button.dataset["level"]);
-            startLevel(Assets.levelCreators[world][level]);
+            setLevel(world, level);
+            startLevel();
             Assets.ui["LevelControls"].show();
         });
     }

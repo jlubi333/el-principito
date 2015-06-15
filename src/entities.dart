@@ -2,6 +2,7 @@ import "dart:html";
 import "dart:math";
 
 import "assets.dart";
+import "game.dart";
 import "graphics.dart";
 import "metrics.dart";
 import "world.dart";
@@ -84,6 +85,9 @@ abstract class Entity {
     }
 
     void render(Vector offset) {
+        if (this.sprite == null) {
+            return;
+        }
         ctx.drawImage(this.sprite,
                       this.boundingBox.x + offset.x,
                       this.boundingBox.y + offset.y);
@@ -231,5 +235,18 @@ class RebounderEnemy extends LivingEntity {
         }
         this.attack(null);
         super.update(delta);
+    }
+}
+
+class GoalTile extends Entity {
+    GoalTile(num x, num y)
+        : super(null, new BoundingBox(x, y, Tile.SIZE, Tile.SIZE), new Vector.zero());
+
+    void update(num delta) {
+        if (this.getCollidingEntities().contains(level.player)) {
+            exitLevel();
+            increaseLevel();
+            startLevel();
+        }
     }
 }

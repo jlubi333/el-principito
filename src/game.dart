@@ -12,7 +12,9 @@ import "world.dart";
 const num DT = 1000 / 60;
 const int RENDER_DISTANCE = 20;
 
-bool stop = true;
+Timer updateTimer = null;
+
+bool inLevel;
 
 void startGame() async {
     setupInputHandler();
@@ -28,8 +30,10 @@ void startMainMenu() {
     Assets.ui["MainMenu"].show();
 }
 
-void startLevel(LevelCreator lc) {
-    level = lc();
+void startLevel() {
+    inLevel = true;
+
+    level = levelCreator();
     level.backgroundMusic.play(loop: true);
 
     window.onResize.listen((Event e) {
@@ -38,26 +42,22 @@ void startLevel(LevelCreator lc) {
     resizeCanvas();
 
     // Update and Render
-    stop = false;
-    Timer updateTimer = new Timer.periodic(new Duration(microseconds: (1000.0 * DT).round()), update);
+    updateTimer = new Timer.periodic(new Duration(microseconds: (1000.0 * DT).round()), update);
     window.animationFrame.then(render);
 }
 
 void exitLevel() {
+    inLevel = false;
+    if (updateTimer != null && updateTimer.isActive) {
+        updateTimer.cancel();
+    }
     if (level != null) {
         level.backgroundMusic.stop();
-        level = null;
     }
-    stop = true;
 }
 
 num jumpTimer = 0;
 void update(Timer timer) {
-    if (stop) {
-        timer.cancel();
-        return;
-    }
-
     jumpTimer += DT;
 
     // Running
@@ -102,7 +102,7 @@ void update(Timer timer) {
 Vector offset = new Vector.zero();
 Tile pt;
 void render(num timestamp) {
-    if (stop) {
+    if (!inLevel) {
         ctx.save();
         ctx.fillStyle = "#000000";
         ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -152,4 +152,3 @@ void resizeCanvas() {
     num s = canvas.height / worldHeight();
     ctx.scale(s, s);
 }
-

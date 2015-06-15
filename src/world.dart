@@ -8,7 +8,10 @@ import "metrics.dart";
 
 typedef Level LevelCreator();
 
+LevelCreator levelCreator;
 Level level;
+
+int worldNumber, levelNumber;
 
 class Level {
     String name;
@@ -39,6 +42,15 @@ class Level {
             }
 
             List<Entity> entities = [];
+
+            Enitity t;
+            for (Map specialTileData in levelData["specialTiles"]) {
+                if (specialTileData["class"] == "GoalTile") {
+                    t = new GoalTile(specialTileData["x"] * Tile.SIZE,
+                                     specialTileData["y"] * Tile.SIZE);
+                }
+                entities.add(t);
+            }
 
             Entity e;
             for (Map enemyData in levelData["enemies"]) {
@@ -116,4 +128,19 @@ Tile tileFromCoordinate(num x, num y) {
     } else {
         return level.map[row][col];
     }
+}
+
+void setLevel(int w, int l) {
+    worldNumber = w;
+    levelNumber = l;
+    levelCreator = Assets.levelCreators[worldNumber][levelNumber];
+}
+
+void increaseLevel() {
+    levelNumber += 1;
+    if (levelNumber > Assets.LEVELS_PER_WORLD) {
+        levelNumber = 1;
+        worldNumber += 1;
+    }
+    levelCreator = Assets.levelCreators[worldNumber][levelNumber];
 }

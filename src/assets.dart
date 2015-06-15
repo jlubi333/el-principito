@@ -6,7 +6,7 @@ import "ui.dart";
 import "world.dart";
 
 class Assets {
-    static const int TILE_COUNT = 3;
+    static const int TILE_COUNT = 5;
     static const int WORLD_COUNT = 3;
     static const int LEVELS_PER_WORLD = 3;
 
@@ -50,9 +50,8 @@ class Assets {
         for (int w = 1; w <= WORLD_COUNT; w++) {
             levelCreators[w] = {};
             for (int i = 1; i <= LEVELS_PER_WORLD; i++) {
-                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w}/Level${i}.json?v=1");
+                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w}/Level${i}.json?v=3");
             }
         }
     }
 }
-
