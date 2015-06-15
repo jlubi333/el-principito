@@ -141,11 +141,6 @@ void render(num timestamp) {
     window.animationFrame.then(render);
 }
 
-bool isKeyPressed(int keyCode) {
-    // Cannot just return keys[keyCode] because it may be null.
-    return keys[keyCode] == true;
-}
-
 void resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;

@@ -27,3 +27,8 @@ void setupInputHandler() {
         keys[e.keyCode] = false;
     });
 }
+
+bool isKeyPressed(int keyCode) {
+    // Cannot just return keys[keyCode] because it may be null.
+    return keys[keyCode] == true;
+}
