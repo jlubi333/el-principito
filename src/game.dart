@@ -132,7 +132,9 @@ void render(num timestamp) {
     }
     offset.y = 0;
 
-    pt = level.player.tile != null ? level.player.tile : pt;
+    pt = new Tile(0,
+                  level.player.boundingBox.y ~/ Tile.SIZE,
+                  level.player.boundingBox.x ~/ Tile.SIZE);
     for (int r = max(pt.row - RENDER_DISTANCE, 0); r <= min(pt.row + RENDER_DISTANCE, level.map.length - 1); r++) {
         for (int c = max(pt.col - RENDER_DISTANCE, 0); c <= min(pt.col + RENDER_DISTANCE, level.map[r].length - 1); c++) {
             level.map[r][c].render(offset);

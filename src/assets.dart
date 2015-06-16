@@ -50,7 +50,7 @@ class Assets {
         for (int w = 1; w <= WORLD_COUNT; w++) {
             levelCreators[w] = {};
             for (int i = 1; i <= LEVELS_PER_WORLD; i++) {
-                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w}/Level${i}.json?v=12");
+                levelCreators[w][i] = await Level.loadFromFile("assets/levels/world${w}/Level${i}.json?v=13");
             }
         }
     }

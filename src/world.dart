@@ -123,6 +123,13 @@ Tile tileFromCoordinate(num x, num y) {
     int row = y ~/ Tile.SIZE;
     int col = x ~/ Tile.SIZE;
 
+    if (y < 0) {
+        row -= 1;
+    }
+    if (x < 0) {
+        col -= 1;
+    }
+
     if (row >= level.map.length || row < 0 || col >= level.map[row].length || col < 0) {
         return null;
     } else {
