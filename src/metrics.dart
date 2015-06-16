@@ -1,3 +1,5 @@
+import "graphics.dart";
+
 Map<String, Direction> directionFromString = {
     "UP": Direction.UP,
     "RIGHT": Direction.RIGHT,
@@ -48,5 +50,9 @@ class BoundingBox {
                 && p.x < this.right
                 && p.y > this.y
                 && p.y < this.bottom);
+    }
+
+    void render(Vector offset) {
+        ctx.strokeRect(this.x + offset.x, this.y + offset.y, this.width, this.height);
     }
 }

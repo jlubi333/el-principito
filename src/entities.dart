@@ -240,8 +240,15 @@ class RebounderEnemy extends LivingEntity {
 }
 
 class GoalTile extends Entity {
+    static final num PADDING = Tile.SIZE / 4;
+
     GoalTile(num x, num y)
-        : super(null, new BoundingBox(x, y, Tile.SIZE, Tile.SIZE), new Vector.zero());
+        : super(null,
+                new BoundingBox(x + PADDING,
+                                y + PADDING,
+                                Tile.SIZE - 2 * PADDING,
+                                Tile.SIZE - 2 * PADDING),
+                new Vector.zero());
 
     void update(num delta) {
         if (this.getCollidingEntities().contains(level.player)) {
