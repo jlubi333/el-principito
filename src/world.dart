@@ -144,3 +144,7 @@ void increaseLevel() {
     }
     levelCreator = Assets.levelCreators[worldNumber][levelNumber];
 }
+
+void hashLevel(int w, int l) {
+    return w * Assets.LEVELS_PER_WORLD + l;
+}

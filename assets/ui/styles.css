@@ -12,3 +12,16 @@
     border: 1px solid #FFFFFF;
     cursor: pointer;
 }
+
+.open {
+    border-color: #FFFFFF;
+}
+
+.done {
+    border-color: #00FF00;
+}
+
+.locked {
+    border-color: #FF0000;
+    cursor: default;
+}

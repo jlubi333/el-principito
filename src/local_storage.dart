@@ -1,11 +1,17 @@
 import "dart:html";
 
 import "assets.dart";
+import "world.dart";
 
 void setLevelDone(int w, int l, bool b) {
-    window.localStorage["${w * Assets.LEVELS_PER_WORLD + l}"] = b ? "true" : "false";
+    int hash = hashLevel(w, l);
+    window.localStorage["level${hash}"] = b ? "true" : "false";
 }
 
 bool isLevelDone(int w, int l) {
-    return window.localStorage["${w * Assets.LEVELS_PER_WORLD + l}"] == "true";
+    int hash = hashLevel(w, l);
+    if (hash == hashLevel(1, 0)) {
+        return true;
+    }
+    return window.localStorage["level${hash}"] == "true";
 }

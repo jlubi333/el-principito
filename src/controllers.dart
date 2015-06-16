@@ -1,5 +1,6 @@
 import "assets.dart";
 import "game.dart";
+import "local_storage.dart";
 import "sound.dart";
 import "world.dart";
 
@@ -22,13 +23,25 @@ void worldSelectController(Element parent) {
 void levelSelectController(Element parent) {
     List<Element> buttons = parent.querySelectorAll(".level-select-button");
     for (Element button in buttons) {
-        button.onMouseDown.listen((e) {
-            int world = int.parse(button.dataset["world"]);
-            int level = int.parse(button.dataset["level"]);
-            setLevel(world, level);
-            startLevel();
-            Assets.ui["LevelControls"].show();
-        });
+        int world = int.parse(button.dataset["world"]);
+        int level = int.parse(button.dataset["level"]);
+        bool open = isLevelDone(world, level - 1);
+        bool done = isLevelDone(world, level);
+        if (open || done) {
+            button.onMouseDown.listen((e) {
+                setLevel(world, level);
+                startLevel();
+                Assets.ui["LevelControls"].show();
+            });
+
+            if (done) {
+                button.classes.add("done");
+            } else if (open) {
+                button.classes.add("open");
+            }
+        } else {
+            button.classes.add("locked");
+        }
     }
 }
 
