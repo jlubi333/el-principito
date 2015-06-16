@@ -4,6 +4,7 @@ import "dart:math";
 import "assets.dart";
 import "game.dart";
 import "graphics.dart";
+import "local_storage.dart";
 import "metrics.dart";
 import "world.dart";
 
@@ -244,9 +245,8 @@ class GoalTile extends Entity {
 
     void update(num delta) {
         if (this.getCollidingEntities().contains(level.player)) {
-            exitLevel();
-            increaseLevel();
-            startLevel();
+            setLevelDone(worldNumber, levelNumber, true);
+            startMainMenu();
         }
     }
 }
