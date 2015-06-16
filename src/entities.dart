@@ -160,7 +160,6 @@ abstract class LivingEntity extends Entity {
 }
 
 class Player extends LivingEntity {
-    Vector spawnPosition;
     num attackReach = 1.5 * Tile.SIZE;
 
     Player(Vector position,
@@ -170,16 +169,11 @@ class Player extends LivingEntity {
                 new Vector.zero(),
                 initialDirection,
                 6 * Tile.SIZE,
-                15 * Tile.SIZE)
-    {
-        this.spawnPosition = position;
-    }
+                15 * Tile.SIZE);
 
     void die() {
-        this.velocity = new Vector.zero();
-        this.boundingBox.x = this.spawnPosition.x;
-        this.boundingBox.y = this.spawnPosition.y;
         Assets.sounds["PlayerDeath"].play(volume: 0.1);
+        resetLevel();
     }
 
     void jump() {

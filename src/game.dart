@@ -56,6 +56,11 @@ void exitLevel() {
     }
 }
 
+void resetLevel() {
+    exitLevel();
+    startLevel();
+}
+
 num jumpTimer = 0;
 void update(Timer timer) {
     jumpTimer += DT;
